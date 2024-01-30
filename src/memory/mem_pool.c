@@ -16,7 +16,8 @@ struct mp_pool_s *mp_create_pool(size_t size) {
         return NULL;
     }
     pool->large = NULL;
-    pool->current = pool->head = (unsigned char *) pool + sizeof(struct mp_pool_s);
+    pool->head = (unsigned char *) pool + sizeof(struct mp_pool_s);
+    pool->current = pool->head;
     pool->head->last = (unsigned char *) pool + sizeof(struct mp_pool_s) + sizeof(struct mp_node_s);
     pool->head->end = (unsigned char *) pool + PAGE_SIZE;
     pool->head->failed = 0;
@@ -123,7 +124,7 @@ void *mp_malloc(struct mp_pool_s *pool, size_t size) {
         cur = pool->current;
         while (cur) {
             mem_addr = mp_align_ptr(cur->last, MP_ALIGNMENT);
-            if (cur->end - mem_addr >= size) {
+            if ((size_t)(cur->end - mem_addr) >= size) {
                 cur->quote++;//引用+1
                 cur->last = mem_addr + size;
                 return mem_addr;
